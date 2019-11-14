@@ -4,6 +4,10 @@
 
 See preprint of manuscript on [bioRxiv](https://www.biorxiv.org/content/10.1101/828350v1).
 
+<br>
+
+_**We have plans to convert all these scripts into a snakemake workflow. For now, we have just documented the scripts and structure of it all.**_
+
 General workflow is:
 
 1. Create directory structure with parameter file and start sequence (MRCA).
@@ -94,6 +98,8 @@ The directory structure looks like such:
 
 
 ```
+!/usr/bin/env bash
+
 for name in $(cat list.txt)
     cd $name
     for count in `seq 1 5`; do
@@ -155,6 +161,7 @@ We need to make sure every sequence has it's own directory to store the read fil
 
 ```
 !/usr/bin/env bash
+
 ##--- Making New Directories to complete ART in
 ## Parameter
 for par in $name; do #parameter
@@ -237,7 +244,7 @@ The directory structure will look like this after:
 	|	|	|	├── sequences00001.fas
 	|	|	|	└── count_haps.py
 	|	|	├── sequences00002
-	|	|	|	├── sequences00001.fas
+	|	|	|	├── sequences00002.fas
 	|	|	|	└── count_haps.py
 	|	|	├── .....
 	|	|	|
@@ -332,7 +339,7 @@ The directory structure will look like this after:
 	|	|	|	├── sequences00001.fas
 	|	|	|	└── count_haps.py
 	|	|	├── sequences00002
-	|	|	|	├── sequences00001.fas
+	|	|	|	├── sequences00002.fas
 	|	|	|	└── count_haps.py
 	|	|	├── .....
 	|	|	|
@@ -349,6 +356,8 @@ The directory structure will look like this after:
 `$name` is a line from `list.txt`. We run this in array format in SLURM.
 
 ```
+!/usr/bin/env bash
+
 module load art # loads the art module
 module load parallel # loads parallelization module
 module load samtools/1.3.1 # loads samtools
@@ -419,7 +428,7 @@ The directory structure will look like this after:
 	|	|	|	├── read1.fq.gz
 	|	|	|	└── read2.fq.gz
 	|	|	├── sequences00002
-	|	|	|	├── sequences00001.fas
+	|	|	|	├── sequences00002.fas
 	|	|	|	├── count_haps.py
 	|	|	|	├── read_errFree.bam
 	|	|	|	├── read.bam
@@ -429,3 +438,117 @@ The directory structure will look like this after:
 	|	|	|
 	
 ```
+
+
+
+##########################################################################################
+## Step 6: Run the simulated reads through HAPHPIPE.
+##########################################################################################
+
+For more information regarding HAPHPIPE, see [github](https://github.com/gwcbi/haphpipe).
+
+Each pair of reads for each sample can be run through one of the two pipelines available within HAPHPIPE. We used the reference-based pipeline, `haphpipe_assemble_02`. Following the HAPHPIPE pipeline, we put the each sample through the various haplotype reconstruction tools. 
+
+
+`$name` is a line from `list.txt`. We run this in array format in SLURM. Here is an example of a single sample running through `haphpipe_assemble_02`. 
+
+```
+!/usr/bin/env bash
+
+$ haphpipe_assemble_02 -h
+USAGE:
+haphpipe_assemble_02 [read1] [read2] [amplicons_fasta] [samp_id] <outdir>
+
+----- HAPHPIPE assembly pipeline 02 -----
+
+This pipeline implements amplicon assembly using a reference-based approach.
+Reads are error-corrected and aligned to provided amplicon reference with up to
+five refinement steps.
+
+Input:
+read1:             Fastq file for read 1. May be compressed (.gz)
+read2:             Fastq file for read 2. May be compressed (.gz)
+amplicons_fasta:   Amplicon reference sequence (fasta)
+samp_id:           Sample ID
+outdir:            Output directory (default is sample_dir/haphpipe_assemble_02)
+
+# This is an example with the parameter set used in the structure examples.
+$ haphpipe_assemble_02 \
+ u1e-3_s100_Ne1000/replicate_1/sequences00001/read1.fq.gz \
+ u1e-3_s100_Ne1000/replicate_1/sequences00001/read2.fq.gz \
+ seqGMRCA \
+ u1e-3_s100_Ne1000_sequences00001
+
+```
+
+You will likely only care about the reads, either corrected, trimmed or raw paired reads, `final.fna`, `final.bam` for inputs into the haplotype reconstruction programs.
+
+<br>
+The directory structure will look like this after:
+
+```
+./viral_simulation
+	|
+	├── scr
+	|	└── CoalEvol7.3.5
+	|
+	├── list.txt
+	|
+	├── paramtemplate.txt
+	|
+	├── seqGMRCA
+	|
+	├── count_haps.py
+	|
+	├── calc_avg_hap.py
+	|
+	├── count_haps.txt
+	|
+	├── u1e-3_s100_Ne1000
+	|	├── parameters
+	|	├── seqGMRCA
+	|	├── replicate_1
+	|	|	├── hap_summary.txt
+	|	|	├── Results
+	|	|	├── sequences00001
+	|	|	|	├── sequences00001.fas
+	|	|	|	├── count_haps.py
+	|	|	|	├── read_errFree.bam
+	|	|	|	├── read.bam
+	|	|	|	├── read1.fq.gz
+	|	|	|	├── read2.fq.gz
+	|	|	|	└── haphpipe_assemble_02
+	|	|	|		├── corrected_1.fastq
+	|	|	|		├── corrected_2.fastq
+	|	|	|		├── corrected_U.fastq
+	|	|	|		├── final.bam
+	|	|	|		├── final.bam.bai
+	|	|	|		├── final_bt2.out
+	|	|	|		├── final.fna
+	|	|	|		├── final.vcf.gz
+	|	|	|		├── final.vcf.gz.tbi
+	|	|	|		├── haphpipe.out
+	|	|	|		├── refined.01.fna
+	|	|	|		├── refined.02.fna
+	|	|	|		├── refined.03.fna
+	|	|	|		├── refined.04.fna
+	|	|	|		├── refined_bt2.01.out
+	|	|	|		├── refined_bt2.02.out
+	|	|	|		├── refined_bt2.03.out
+	|	|	|		├── refined_bt2.04.out
+	|	|	|		├── refined_bt2.out
+	|	|	|		├── refined.fna
+	|	|	|		├── refined_summary.out
+	|	|	|		├── trimmed_1.fastq
+	|	|	|		├── trimmed_2.fastq
+	|	|	|		├── trimmed_U.fastq
+	|	|	|		└── trimmomatic_summary.out
+	|	|	├── .....
+	|	|	|
+	
+```
+
+
+
+
+
