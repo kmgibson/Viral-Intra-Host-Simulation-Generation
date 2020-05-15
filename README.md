@@ -4,6 +4,8 @@
 
 See article on [Infection, Genetics and Evolution](https://doi.org/10.1016/j.meegid.2020.104277).
 
+For HAPHPIPE, see [github](https://github.com/gwcbi/haphpipe) or [User Guide](https://gwcbi.github.io/haphpipe_docs/).
+
 <br>
 
 _**We have plans to convert all these scripts into a snakemake workflow. For now, we have just documented the scripts and structure of it all.**_
