@@ -2,7 +2,7 @@
 
 ### These were used for the haplotype comparison project.
 
-See preprint of manuscript on [bioRxiv](https://www.biorxiv.org/content/10.1101/828350v1).
+See article on [Infection, Genetics and Evolution](https://doi.org/10.1016/j.meegid.2020.104277).
 
 <br>
 
